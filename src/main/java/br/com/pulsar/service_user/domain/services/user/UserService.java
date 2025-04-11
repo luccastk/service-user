@@ -41,12 +41,12 @@ public class UserService {
         return new RecoveryJwtTokenDTO(jwtTokenService.generateToken(userDetails));
     }
 
-    public void saveUser(CreateUser json) {
+    public User saveUser(CreateUser json) {
         User user = userMapper.toEntity(json);
         user.setPassword(
                 passwordEncoder.encode(generatePassword())
         );
-        userRepository.save(user);
+        return userRepository.save(user);
     }
 
     private String generatePassword(){

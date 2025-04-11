@@ -12,6 +12,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -24,14 +25,21 @@ public class SecurityConfigs {
             "/service-user/login"
     };
 
+    public static final String [] ENPOINTS_ADMIN = {
+            "/service-user/v1/admin",
+            "/service-user/v1/admin/**"
+    };
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(req -> {
                     req.requestMatchers(ENDPOINTS_WITH_AUTHENTICATION_NOT_REQUIRED).permitAll();
-                    req.requestMatchers("/service-user/v1/**").hasAnyRole("ADMIN");
+                    req.requestMatchers(ENPOINTS_ADMIN).hasAnyRole("ADMIN");
+                    req.anyRequest().authenticated();
                 })
+                .addFilterBefore(userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 

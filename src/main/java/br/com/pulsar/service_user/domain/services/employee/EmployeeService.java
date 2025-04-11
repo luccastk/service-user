@@ -3,6 +3,8 @@ package br.com.pulsar.service_user.domain.services.employee;
 import br.com.pulsar.service_user.domain.dtos.employee.CreateEmployee;
 import br.com.pulsar.service_user.domain.dtos.http.ResponseUserDTO;
 import br.com.pulsar.service_user.domain.mapper.EmployeeMapper;
+import br.com.pulsar.service_user.domain.models.Employee;
+import br.com.pulsar.service_user.domain.models.User;
 import br.com.pulsar.service_user.domain.repositories.EmployeeRepository;
 import br.com.pulsar.service_user.domain.repositories.UserRepository;
 import br.com.pulsar.service_user.domain.services.user.UserService;
@@ -25,12 +27,16 @@ public class EmployeeService {
             throw new DuplicateKeyException("User already register.");
         }
 
-        userService.saveUser(json.user());
+        if (userRepository.existsByEmailIgnoreCase(json.user().email())) {
+            throw new DuplicateKeyException("Email already register.");
+        }
+
+        User user = userService.saveUser(json.user());
+        Employee employee = employeeMapper.toEntity(json);
+        employee.setUser(user);
 
         return employeeMapper.toResponseDTO(
-                employeeRepository.save(
-                        employeeMapper.toEntity(json)
-                )
+                employeeRepository.save(employee)
         );
     }
 }
