@@ -1,18 +1,16 @@
 package br.com.pulsar.service_user.controllers;
 
 import br.com.pulsar.service_user.domain.dtos.jwt.RecoveryJwtTokenDTO;
+import br.com.pulsar.service_user.domain.dtos.password.PasswordAlterDTO;
 import br.com.pulsar.service_user.domain.dtos.user.LoginUserDTO;
 import br.com.pulsar.service_user.domain.presenters.DataPresenter;
 import br.com.pulsar.service_user.domain.services.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/service-user/")
+@RequestMapping
 public class UserController {
 
     @Autowired
@@ -23,5 +21,14 @@ public class UserController {
             @RequestBody LoginUserDTO login
     ) {
         return ResponseEntity.ok(new DataPresenter<>(userService.authenticatorUser(login)));
+    }
+
+    @PutMapping("/password/change")
+    public ResponseEntity<?> changePassword(
+            @RequestBody PasswordAlterDTO dto
+    ) {
+        System.out.println("DTO recebido: " + dto);
+        userService.passwordAlter(dto);
+        return ResponseEntity.ok().build();
     }
 }

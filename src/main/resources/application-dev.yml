@@ -1,7 +1,7 @@
 server:
   servlet:
     context-path: /
-  port: 9000
+  port: 0
 
 spring:
   application:
@@ -19,6 +19,33 @@ jwt:
   token:
     secret-key: chave-teste-dev
     issuer: pulsar-test-auth
+
+openapi:
+  service:
+    title: service-user doc
+    version: 1.0.0
+    url: http://localhost:8080
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+
 
 logging:
   level:

@@ -1,30 +1,36 @@
 package br.com.pulsar.service_user.domain.services.user;
 
 import br.com.pulsar.service_user.domain.dtos.jwt.RecoveryJwtTokenDTO;
+import br.com.pulsar.service_user.domain.dtos.password.PasswordAlterDTO;
 import br.com.pulsar.service_user.domain.dtos.user.CreateUser;
 import br.com.pulsar.service_user.domain.dtos.user.LoginUserDTO;
 import br.com.pulsar.service_user.domain.mapper.UserMapper;
+import br.com.pulsar.service_user.domain.models.Role;
 import br.com.pulsar.service_user.domain.models.User;
+import br.com.pulsar.service_user.domain.repositories.RoleRepository;
 import br.com.pulsar.service_user.domain.repositories.UserRepository;
-import br.com.pulsar.service_user.infra.configs.SecurityConfigs;
+import br.com.pulsar.service_user.exception.PasswordNotMatchException;
 import br.com.pulsar.service_user.infra.jwt.JwtTokenService;
 import br.com.pulsar.service_user.utils.PasswordGenerator;
+import br.com.pulsar.service_user.utils.SecurityUtils;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.password.CompromisedPasswordException;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
@@ -41,12 +47,39 @@ public class UserService {
         return new RecoveryJwtTokenDTO(jwtTokenService.generateToken(userDetails));
     }
 
+    @Transactional
     public User saveUser(CreateUser json) {
         User user = userMapper.toEntity(json);
         user.setPassword(
                 passwordEncoder.encode(generatePassword())
         );
+        user.setRoles(getRoleName(json));
         return userRepository.save(user);
+    }
+
+    public void passwordAlter(PasswordAlterDTO password) {
+        User user = userRepository.findByEmailIgnoreCase(SecurityUtils.getCurrentEmail())
+                .orElseThrow(() -> new EntityNotFoundException("User not found."));
+
+        if (!passwordEncoder.matches(password.password(), user.getPassword())) {
+            throw new PasswordNotMatchException("Password dosen't match");
+        }
+
+        if (!password.newPassword().equals(password.confirmPassword())) {
+            throw new PasswordNotMatchException("New password doesn't match");
+        }
+
+        user.setPassword(
+                passwordEncoder.encode(password.newPassword())
+        );
+        userRepository.save(user);
+    }
+
+    private List<Role> getRoleName(CreateUser json) {
+        return json.role().stream()
+                .map(roleName -> roleRepository.findByName(roleName)
+                        .orElseThrow(() ->  new IllegalArgumentException("Role not found: " + roleName)))
+                .toList();
     }
 
     private String generatePassword(){

@@ -22,12 +22,17 @@ public class SecurityConfigs {
     private UserAuthenticationFilter userAuthenticationFilter;
 
     public static final String [] ENDPOINTS_WITH_AUTHENTICATION_NOT_REQUIRED = {
-            "/service-user/login"
+            "/login",
+            "/v3/api-docs",
+            "/v3/api-docs/**",
+            "/swagger-ui.html",
+            "/swagger-ui/**",
+            "/"
     };
 
-    public static final String [] ENPOINTS_ADMIN = {
-            "/service-user/v1/admin",
-            "/service-user/v1/admin/**"
+    public static final String [] ENDPOINTS_ADMIN = {
+            "/v1/admin",
+            "/v1/admin/**"
     };
 
     @Bean
@@ -36,7 +41,7 @@ public class SecurityConfigs {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(req -> {
                     req.requestMatchers(ENDPOINTS_WITH_AUTHENTICATION_NOT_REQUIRED).permitAll();
-                    req.requestMatchers(ENPOINTS_ADMIN).hasAnyRole("ADMIN");
+                    req.requestMatchers(ENDPOINTS_ADMIN).hasAnyRole("ADMIN");
                     req.anyRequest().authenticated();
                 })
                 .addFilterBefore(userAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

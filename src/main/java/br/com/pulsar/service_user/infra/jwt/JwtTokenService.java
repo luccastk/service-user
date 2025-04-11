@@ -2,16 +2,20 @@ package br.com.pulsar.service_user.infra.jwt;
 
 import br.com.pulsar.service_user.domain.services.user.UserDetailsImpl;
 import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class JwtTokenService {
@@ -29,6 +33,9 @@ public class JwtTokenService {
                     .withIssuedAt(creationDate())
                     .withExpiresAt(expirationDate())
                     .withSubject(userDetails.getUsername())
+                    .withClaim("roles", userDetails.getAuthorities().stream()
+                            .map(GrantedAuthority::getAuthority)
+                            .toList())
                     .sign(algorithm);
         } catch (JWTCreationException e) {
             throw new JWTCreationException("Generate token error.", e);
@@ -48,6 +55,13 @@ public class JwtTokenService {
         }
     }
 
+    public List<String> getRolesFromToken(String token) {
+        Algorithm algorithm = Algorithm.HMAC256(secret_key);
+        JWTVerifier verifier = JWT.require(algorithm).build();
+        DecodedJWT decodedJWT = verifier.verify(token);
+        return decodedJWT.getClaim("roles").asList(String.class);
+    }
+
     private Instant expirationDate() {
         return ZonedDateTime.now(ZoneId.of("America/Sao_Paulo")).plusHours(8).toInstant();
     }
@@ -55,6 +69,5 @@ public class JwtTokenService {
     private Instant creationDate() {
         return ZonedDateTime.now(ZoneId.of("America/Sao_Paulo")).toInstant();
     }
-
 
 }
