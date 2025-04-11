@@ -1,0 +1,25 @@
+server:
+  servlet:
+    context-path: /
+  port: 9000
+
+spring:
+  application:
+    name: service-user
+  datasource:
+    url: jdbc:postgresql://localhost:5432/users_db
+    username: admin
+    password: admin
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+jwt:
+  token:
+    secret-key: chave-teste-dev
+    issuer: pulsar-test-auth
+
+logging:
+  level:
+    org.springframework.web: DEBUG
