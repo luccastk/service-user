@@ -1,10 +1,8 @@
-package br.com.pulsar.service_user.infra.configs;
+package br.com.pulsar.service_user.infra.jwt;
 
-import br.com.pulsar.service_user.domain.models.User;
 import br.com.pulsar.service_user.domain.repositories.UserRepository;
-import br.com.pulsar.service_user.domain.services.user.UserDetailsImpl;
 import br.com.pulsar.service_user.exception.MissingTokenException;
-import br.com.pulsar.service_user.infra.jwt.JwtTokenService;
+import br.com.pulsar.service_user.infra.configs.SecurityConfigs;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,7 +12,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -33,9 +30,6 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-
-        String authHeader = request.getHeader("Authorization");
-        System.out.println("Authorization header: " + authHeader);
         if (checkIfEndpointNeedAuth(request)) {
             String token = recoveryToken(request);
             if (token != null) {

@@ -1,6 +1,7 @@
 package br.com.pulsar.service_user.domain.services.user;
 
 import br.com.pulsar.service_user.domain.dtos.jwt.RecoveryJwtTokenDTO;
+import br.com.pulsar.service_user.domain.dtos.kafka.PasswordChangeKafkaEvent;
 import br.com.pulsar.service_user.domain.dtos.password.PasswordAlterDTO;
 import br.com.pulsar.service_user.domain.dtos.user.CreateUser;
 import br.com.pulsar.service_user.domain.dtos.user.LoginUserDTO;
@@ -9,6 +10,7 @@ import br.com.pulsar.service_user.domain.models.Role;
 import br.com.pulsar.service_user.domain.models.User;
 import br.com.pulsar.service_user.domain.repositories.RoleRepository;
 import br.com.pulsar.service_user.domain.repositories.UserRepository;
+import br.com.pulsar.service_user.domain.services.kafka.MailEventPublisher;
 import br.com.pulsar.service_user.exception.PasswordNotMatchException;
 import br.com.pulsar.service_user.infra.jwt.JwtTokenService;
 import br.com.pulsar.service_user.utils.PasswordGenerator;
@@ -18,7 +20,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.authentication.password.CompromisedPasswordException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final MailEventPublisher mailEventPublisher;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
@@ -50,13 +52,24 @@ public class UserService {
     @Transactional
     public User saveUser(CreateUser json) {
         User user = userMapper.toEntity(json);
-        user.setPassword(
-                passwordEncoder.encode(generatePassword())
+
+        mailEventPublisher.sendWelcomeMail(userMapper.toKafkaUser(json), user);
+
+        String temporaryPassword = generatePassword();
+
+        mailEventPublisher.sendPasswordChange(
+                userMapper.toKafkaUserAndPassword(json, temporaryPassword), user
         );
+
+        user.setPassword(passwordEncoder.encode(
+                temporaryPassword
+        ));
         user.setRoles(getRoleName(json));
+
         return userRepository.save(user);
     }
 
+    @Transactional
     public void passwordAlter(PasswordAlterDTO password) {
         User user = userRepository.findByEmailIgnoreCase(SecurityUtils.getCurrentEmail())
                 .orElseThrow(() -> new EntityNotFoundException("User not found."));
@@ -75,6 +88,7 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @Transactional
     private List<Role> getRoleName(CreateUser json) {
         return json.role().stream()
                 .map(roleName -> roleRepository.findByName(roleName)

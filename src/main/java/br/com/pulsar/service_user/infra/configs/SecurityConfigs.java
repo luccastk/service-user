@@ -1,5 +1,6 @@
 package br.com.pulsar.service_user.infra.configs;
 
+import br.com.pulsar.service_user.infra.jwt.UserAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
