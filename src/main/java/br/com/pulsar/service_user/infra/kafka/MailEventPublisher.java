@@ -1,4 +1,4 @@
-package br.com.pulsar.service_user.domain.services.kafka;
+package br.com.pulsar.service_user.infra.kafka;
 
 import br.com.pulsar.service_user.domain.dtos.kafka.PasswordChangeKafkaEvent;
 import br.com.pulsar.service_user.domain.dtos.kafka.UserKafkaEvent;

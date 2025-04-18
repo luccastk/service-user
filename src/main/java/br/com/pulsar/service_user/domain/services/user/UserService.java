@@ -1,7 +1,6 @@
 package br.com.pulsar.service_user.domain.services.user;
 
 import br.com.pulsar.service_user.domain.dtos.jwt.RecoveryJwtTokenDTO;
-import br.com.pulsar.service_user.domain.dtos.kafka.PasswordChangeKafkaEvent;
 import br.com.pulsar.service_user.domain.dtos.password.PasswordAlterDTO;
 import br.com.pulsar.service_user.domain.dtos.user.CreateUser;
 import br.com.pulsar.service_user.domain.dtos.user.LoginUserDTO;
@@ -10,7 +9,7 @@ import br.com.pulsar.service_user.domain.models.Role;
 import br.com.pulsar.service_user.domain.models.User;
 import br.com.pulsar.service_user.domain.repositories.RoleRepository;
 import br.com.pulsar.service_user.domain.repositories.UserRepository;
-import br.com.pulsar.service_user.domain.services.kafka.MailEventPublisher;
+import br.com.pulsar.service_user.infra.kafka.MailEventPublisher;
 import br.com.pulsar.service_user.exception.PasswordNotMatchException;
 import br.com.pulsar.service_user.infra.jwt.JwtTokenService;
 import br.com.pulsar.service_user.utils.PasswordGenerator;

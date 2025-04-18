@@ -27,7 +27,6 @@ public class UserController {
     public ResponseEntity<?> changePassword(
             @RequestBody PasswordAlterDTO dto
     ) {
-        System.out.println("DTO recebido: " + dto);
         userService.passwordAlter(dto);
         return ResponseEntity.ok().build();
     }
